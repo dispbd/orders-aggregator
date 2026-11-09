@@ -1,5 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { fromKop, parseRub, toKop } from "../src/utils/money.js";
+import { applyDiscount, fromKop, parsePercent, parseRub, toKop } from "../src/utils/money.js";
+
+describe("parsePercent", () => {
+  it("принимает число и строку с числом от 0 до 100", () => {
+    expect(parsePercent(0)).toBe(0);
+    expect(parsePercent(33)).toBe(33);
+    expect(parsePercent("16.5")).toBe(16.5);
+    expect(parsePercent(100)).toBe(100);
+  });
+
+  it("отклоняет мусор, пустую строку и значения вне 0..100", () => {
+    for (const raw of ["abc", "", null, -1, 101, Number.NaN]) expect(() => parsePercent(raw)).toThrow();
+  });
+});
+
+describe("applyDiscount", () => {
+  it("считает сумму со скидкой в копейках, доли копейки отбрасывает", () => {
+    expect(applyDiscount(250000, 16.5)).toBe(208750);
+    expect(applyDiscount(9999, 33)).toBe(6699); // 66.9933 ₽
+    expect(applyDiscount(100000, 0)).toBe(100000);
+    expect(applyDiscount(100000, 100)).toBe(0);
+  });
+});
 
 describe("parseRub", () => {
   it("принимает число и строку с числом", () => {
