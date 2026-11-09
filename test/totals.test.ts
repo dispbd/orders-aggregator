@@ -19,6 +19,24 @@ describe("GET /customers/:id/daily-totals", () => {
     ]);
   });
 
+  it("день считает по смещению таймзоны на момент заказа, а не на текущую дату (переход на летнее время)", async () => {
+    // Europe/Berlin: до 29.03.2026 01:00Z — UTC+1, после — UTC+2.
+    // Заказы по обе стороны перехода, чтобы тест ловил ошибку в любое время года.
+    ctx.api.customers.set("c_b", "Europe/Berlin");
+    const order = (amount: number, createdAt: string) => apiOrder({ customerId: "c_b", amount, createdAt, updatedAt: createdAt });
+    await postWebhook(ctx.app, order(100, "2026-03-28T22:30:00Z")); // 23:30 CET → 28.03
+    await postWebhook(ctx.app, order(200, "2026-03-28T23:30:00Z")); // 00:30 CET → 29.03
+    await postWebhook(ctx.app, order(400, "2026-03-29T22:30:00Z")); // 00:30 CEST → 30.03
+    await postWebhook(ctx.app, order(800, "2026-03-30T21:30:00Z")); // 23:30 CEST → 30.03
+
+    const res = await dailyTotals(ctx.app, "c_b", "2026-03-28", "2026-03-30");
+    expect(res.json()).toEqual([
+      { date: "2026-03-28", total: 100 },
+      { date: "2026-03-29", total: 200 },
+      { date: "2026-03-30", total: 1200 },
+    ]);
+  });
+
   it("не учитывает pending и refunded", async () => {
     await postWebhook(ctx.app, apiOrder({ amount: 500 }));
     await postWebhook(ctx.app, apiOrder({ amount: 700, status: "pending" }));

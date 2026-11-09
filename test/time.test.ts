@@ -24,6 +24,12 @@ describe("tzOffsetMinutes", () => {
     expect(tzOffsetMinutes("Asia/Novosibirsk", at)).toBe(420);
     expect(tzOffsetMinutes("America/New_York", at)).toBe(-300);
   });
+
+  it("учитывает переход на летнее время", () => {
+    // Europe/Berlin переходит на летнее время 29.03.2026 в 01:00Z
+    expect(tzOffsetMinutes("Europe/Berlin", new Date("2026-03-29T00:59:59Z"))).toBe(60);
+    expect(tzOffsetMinutes("Europe/Berlin", new Date("2026-03-29T01:00:00Z"))).toBe(120);
+  });
 });
 
 describe("даты", () => {
