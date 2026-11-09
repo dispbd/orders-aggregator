@@ -23,6 +23,16 @@ describe("toKop / fromKop", () => {
 
   it("отбрасывает доли копейки", () => {
     expect(toKop(10.999)).toBe(1099);
+    expect(toKop(0.019)).toBe(1);
+  });
+
+  it("не теряет копейку на погрешности двоичной дроби", () => {
+    // 4723.9 * 100 === 472389.99999999994 — значения из реальных amountPaid
+    expect(toKop(4723.9)).toBe(472390);
+    expect(toKop(19.99)).toBe(1999);
+    expect(toKop(1.15)).toBe(115);
+    expect(toKop(0.29)).toBe(29);
+    expect(toKop(4549.23)).toBe(454923);
   });
 
   it("копейки в рубли", () => {
